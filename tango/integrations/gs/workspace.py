@@ -408,9 +408,14 @@ class GSWorkspace(RemoteWorkspace):
             key = self._ds.key(self._stepinfo_key, unique_id)
             all_unique_id_keys.append(key)
 
-        missing: List = []
-        step_info_entities = self._ds.get_multi(keys=all_unique_id_keys, missing=missing)
-        missing_steps = [entity.key.name for entity in missing]
+        N = len(all_unique_id_keys)
+        missing_steps: List = []
+        step_info_entities: List = []
+        for i in range(0, N, 1000):
+            missing: List = []
+            unique_id_key_batch = all_unique_id_keys[i:min(i + 1000, N)]
+            step_info_entities += self._ds.get_multi(keys=unique_id_key_batch, missing=missing)
+            missing_steps += [entity.key.name for entity in missing]
 
         step_infos = []
         for step_info_entity in step_info_entities:
